@@ -1,0 +1,9 @@
+[submodule "core"]
+	path = core
+	url = https://github.com/VibeTGram/core.git
+[submodule "mods"]
+	path = mods
+	url = https://github.com/VibeTGram/mods.git
+[submodule "gui"]
+	path = gui
+	url = https://github.com/VibeTGram/gui.git

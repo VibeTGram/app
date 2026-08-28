@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source and pinned submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Validate repository bootstrap contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s LICENSE
+          test -s README.md
+          test -s docs/README.md
+          test -s docs/repositories.md
+          grep -F 'https://github.com/VibeTGram/app' README.md
+          grep -F '| Document | Owning repository |' docs/README.md
+          test "$(git config -f .gitmodules --get-regexp '\\.url$' | grep -c 'https://github.com/VibeTGram/')" -eq 3
+          ! git config -f .gitmodules --get-regexp '\\.branch$'
+          for repo in core mods gui; do
+            test -e "$repo/.git"
+            grep -F "includeBuild(\"$repo\")" settings.gradle.kts
+            git config -f .gitmodules --get-regexp '\\.url$' | grep -F "https://github.com/VibeTGram/${repo}.git"
+          done
+          git diff --check
