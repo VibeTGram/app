@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/release-bom.schema.json",
+  "title": "VibeTGram offline final release BOM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "channel",
+    "application_id",
+    "version_name",
+    "version_code",
+    "build_bom_sha256",
+    "signed_artifact",
+    "signing_certificate_sha256",
+    "produced_at"
+  ],
+  "allOf": [
+    {
+      "if": { "properties": { "channel": { "const": "stable" } }, "required": ["channel"] },
+      "then": { "properties": { "application_id": { "const": "org.vibetgram.client" } } }
+    },
+    {
+      "if": { "properties": { "channel": { "const": "preview" } }, "required": ["channel"] },
+      "then": { "properties": { "application_id": { "const": "org.vibetgram.client.preview" } } }
+    },
+    {
+      "if": { "properties": { "channel": { "const": "nightly" } }, "required": ["channel"] },
+      "then": { "properties": { "application_id": { "const": "org.vibetgram.client.nightly" } } }
+    }
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "channel": { "enum": ["stable", "preview", "nightly"] },
+    "application_id": {
+      "enum": ["org.vibetgram.client", "org.vibetgram.client.preview", "org.vibetgram.client.nightly"]
+    },
+    "version_name": { "$ref": "#/$defs/semver" },
+    "version_code": { "type": "integer", "minimum": 1, "maximum": 2100000000 },
+    "build_bom_sha256": { "$ref": "#/$defs/sha256" },
+    "signed_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": { "type": "string", "pattern": "^[A-Za-z0-9._-]+\\.apk$", "maxLength": 160 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+      }
+    },
+    "signing_certificate_sha256": { "$ref": "#/$defs/sha256" },
+    "produced_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?$",
+      "maxLength": 80
+    }
+  }
+}

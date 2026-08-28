@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/publisher-rotation.schema.json",
+  "title": "VibeTGram addon publisher key rotation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "body", "old_signature", "new_signature"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["old_key_id", "new_key_id", "new_public_key", "package_ids", "effective_at"],
+      "properties": {
+        "old_key_id": { "$ref": "#/$defs/keyId" },
+        "new_key_id": { "$ref": "#/$defs/keyId" },
+        "new_public_key": { "$ref": "#/$defs/publicKey" },
+        "package_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/packageId" }
+        },
+        "effective_at": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      }
+    },
+    "old_signature": { "$ref": "#/$defs/signature" },
+    "new_signature": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "keyId": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "publicKey": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "packageId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$",
+      "minLength": 3,
+      "maxLength": 160
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "algorithm", "role", "key_id", "signed_sha256", "signature"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "algorithm": { "const": "ed25519" },
+        "role": { "const": "publisher-rotation" },
+        "key_id": { "$ref": "#/$defs/keyId" },
+        "signed_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "signature": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$" }
+      }
+    }
+  }
+}
