@@ -1,5 +1,7 @@
 # VibeTGram
 
+Repository: https://github.com/VibeTGram/app
+
 VibeTGram is an unofficial Android Telegram client built on TDLib with a
 replaceable Material 3 Expressive GUI and an opt-in, sandboxed Luau addon
 platform.
