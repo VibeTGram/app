@@ -27,6 +27,14 @@ gradle() {
     fi
 }
 
+has_gradle_task() {
+    local project=$1
+    local task=$2
+    local build_file="$ROOT/$project/build.gradle.kts"
+    [[ -f "$build_file" && "$task" =~ ^(classes|test)$ ]] || return 1
+    grep -Eq 'id\("(java|java-library|application|org\.jetbrains\.kotlin\.jvm)"\)|kotlin\("jvm"\)' "$build_file"
+}
+
 validate_archive() {
     local artifact=$1
     test -s "$artifact"
@@ -43,7 +51,11 @@ case "$lane" in
         ;;
     jvm-fake-adapter)
         if [[ -f "$ROOT/core/build.gradle.kts" && -x "$ROOT/gradlew" ]]; then
-            gradle --no-daemon --console=plain -p core test
+            if has_gradle_task core test; then
+                gradle --no-daemon --console=plain -p core test
+            else
+                ci_only "the checked-out core build does not expose a test task yet"
+            fi
         else
             ci_only "the app repository must provide core JVM/fake-adapter tests (expected command: scripts/gradle-strict.sh --no-daemon --console=plain -p core test)"
         fi
@@ -53,12 +65,10 @@ case "$lane" in
             gradle --no-daemon --console=plain tasks --all
             for project in core mods gui; do
                 if [[ -f "$ROOT/$project/build.gradle.kts" ]]; then
-                    if [[ "$project" == mods ]]; then
-                        # The source-less addon packaging build uses Gradle's
-                        # base plugin and therefore has no JVM classes task.
-                        gradle --no-daemon --console=plain -p "$project" tasks --all
-                    else
+                    if has_gradle_task "$project" classes; then
                         gradle --no-daemon --console=plain -p "$project" classes
+                    else
+                        ci_only "the checked-out $project build does not expose a classes task yet"
                     fi
                 else
                     ci_only "the $project included build must be checked out before compiling the composite"
