@@ -19,7 +19,7 @@ EXPECTED = {
     ),
     "gui": (
         "https://github.com/VibeTGram/gui.git",
-        "c2d92ceada10c370b73dcc5e69aea261551d2bb3",
+        "1b8aed90be56f97e0cea70962ae031f1d597f06f",
     ),
 }
 COMMIT = re.compile(r"^[0-9a-f]{40}$")

@@ -32,7 +32,22 @@ has_gradle_task() {
     local task=$2
     local build_file="$ROOT/$project/build.gradle.kts"
     [[ -f "$build_file" && "$task" =~ ^(classes|test)$ ]] || return 1
-    grep -Eq 'id\("(java|java-library|application|org\.jetbrains\.kotlin\.jvm)"\)|kotlin\("jvm"\)' "$build_file"
+    grep -Eq '^[[:space:]]*(id\("(java|java-library|application|org\.jetbrains\.kotlin\.jvm)"\)|kotlin\("jvm"\))( version "[^"]+")?[[:space:]]*$' "$build_file" || return 1
+    local plugin_version
+    plugin_version=$(grep -E '^[[:space:]]*kotlin\("jvm"\) version "[^"]+"' "$build_file" \
+        | sed -E 's/.*version "([^"]+)".*/\1/' | sed -n '1p')
+    if [[ -n "$plugin_version" ]]; then
+        local metadata="$ROOT/$project/gradle/verification-metadata.xml"
+        [[ -f "$metadata" ]] || return 1
+        grep -Fq "version=\"$plugin_version\"" "$metadata" || return 1
+    fi
+}
+
+has_applied_gradle_plugin() {
+    local project=$1
+    local build_file="$ROOT/$project/build.gradle.kts"
+    [[ -f "$build_file" ]] || return 1
+    grep -Eq '^[[:space:]]*(id\("(java|java-library|application|org\.jetbrains\.kotlin\.jvm)"\)|kotlin\("jvm"\))( version "[^"]+")?[[:space:]]*$' "$build_file"
 }
 
 validate_archive() {
@@ -62,7 +77,6 @@ case "$lane" in
         ;;
     compose-compilation)
         if [[ -x "$ROOT/gradlew" ]]; then
-            gradle --no-daemon --console=plain tasks --all
             for project in core mods gui; do
                 if [[ -f "$ROOT/$project/build.gradle.kts" ]]; then
                     if has_gradle_task "$project" classes; then
@@ -80,7 +94,18 @@ case "$lane" in
         ;;
     internal-artifacts)
         if [[ -x "$ROOT/gradlew" && -f "$ROOT/app/build.gradle.kts" ]]; then
-            gradle --no-daemon --console=plain :app:assembleInternal
+            blocked_project=""
+            for project in core mods gui; do
+                if has_applied_gradle_plugin "$project" && ! has_gradle_task "$project" classes; then
+                    blocked_project=$project
+                    break
+                fi
+            done
+            if [[ -n "$blocked_project" ]]; then
+                ci_only "the checked-out $blocked_project build lacks strict verification metadata for its applied plugin"
+            else
+                gradle --no-daemon --console=plain :app:assembleInternal
+            fi
         else
             ci_only "the app repository must provide an Android app module and an assembleInternal task"
         fi
