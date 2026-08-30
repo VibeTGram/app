@@ -21,7 +21,7 @@ gradle() {
         return 0
     fi
     if [[ -x "$ROOT/scripts/gradle-strict.sh" ]]; then
-        "$ROOT/scripts/gradle-strict.sh" "$@"
+        "$ROOT/scripts/gradle-strict.sh" "$@" --no-configuration-cache
     else
         "$ROOT/gradlew" "$@"
     fi
@@ -43,28 +43,39 @@ case "$lane" in
         ;;
     jvm-fake-adapter)
         if [[ -f "$ROOT/core/build.gradle.kts" && -x "$ROOT/gradlew" ]]; then
-            gradle --no-daemon --console=plain -p core test
+            gradle --no-daemon --console=plain -p core \
+                :core-api:test :core-storage:test :core-tdlib:test
         else
-            ci_only "the app repository must provide core JVM/fake-adapter tests (expected command: scripts/gradle-strict.sh --no-daemon --console=plain -p core test)"
+            ci_only "the app repository must provide core JVM/fake-adapter tests"
         fi
         ;;
     compose-compilation)
         if [[ -x "$ROOT/gradlew" ]]; then
             gradle --no-daemon --console=plain tasks --all
-            for project in core mods gui; do
-                if [[ -f "$ROOT/$project/build.gradle.kts" ]]; then
-                    gradle --no-daemon --console=plain -p "$project" classes
-                else
-                    ci_only "the $project included build must be checked out before compiling the composite"
-                fi
-            done
+            if [[ -f "$ROOT/core/build.gradle.kts" ]]; then
+                gradle --no-daemon --console=plain -p core \
+                    :core-api:classes :core-storage:classes :core-tdlib:classes
+            else
+                ci_only "the core included build must be checked out before compiling the composite"
+            fi
+            if [[ -f "$ROOT/gui/build.gradle.kts" ]]; then
+                gradle --no-daemon --console=plain -p gui classes
+            else
+                ci_only "the gui included build must be checked out before compiling the composite"
+            fi
+            if [[ -d "$ROOT/mods" ]]; then
+                python3 -m compileall -q mods
+            else
+                ci_only "the mods source must be checked out before compiling the composite"
+            fi
         else
             ci_only "the app repository must provide gradlew and checked-out core/mods/gui included builds"
         fi
         ;;
     internal-artifacts)
         if [[ -x "$ROOT/gradlew" && -f "$ROOT/app/build.gradle.kts" ]]; then
-            gradle --no-daemon --console=plain :app:assembleInternal
+            gradle --no-daemon --console=plain \
+                :app:assembleInternal :app:validateNativeLibraries :app:validateInternalArchive
         else
             ci_only "the app repository must provide an Android app module and an assembleInternal task"
         fi

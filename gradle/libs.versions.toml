@@ -6,7 +6,7 @@ agp = "9.2.0"
 kotlin = "2.3.20"
 android-compile-sdk = "36"
 android-build-tools = "36.0.0"
-android-ndk = "29.0.14206865"
+android-ndk = "26.3.11579264"
 cmake = "4.1.2"
 compose-bom = "2025.03.00"
 

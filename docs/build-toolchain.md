@@ -23,7 +23,7 @@ cannot change without a reviewable lock update.
 | Kotlin | 2.3.20 |
 | Android compile SDK | 36 |
 | Android Build Tools | 36.0.0 |
-| Android NDK | 29.0.14206865 |
+| Android NDK | 26.3.11579264 |
 | CMake | 4.1.2 |
 | Compose BOM | 2025.03.00 |
 

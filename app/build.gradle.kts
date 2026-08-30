@@ -28,6 +28,26 @@ val telegramApiId = providers.gradleProperty("telegramApiId")
 val telegramApiHash = providers.gradleProperty("telegramApiHash")
     .orElse(providers.environmentVariable("VIBETGRAM_TELEGRAM_API_HASH"))
     .orElse("")
+val telegramApiHashValue = telegramApiHash.get()
+val telegramApiHashPattern = Regex("^[0-9a-f]{32}$")
+check(telegramApiHashValue.isEmpty() || telegramApiHashPattern.matches(telegramApiHashValue)) {
+    "telegramApiHash must be a 32-character lowercase hexadecimal value"
+}
+
+fun buildConfigString(value: String): String = buildString {
+    append('"')
+    value.forEach { character ->
+        when (character) {
+            '\\' -> append("\\\\")
+            '"' -> append("\\\"")
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '\t' -> append("\\t")
+            else -> append(character)
+        }
+    }
+    append('"')
+}
 val stageTdlibNative by tasks.registering(Sync::class) {
     supportedNativeAbis.forEach { abi ->
         from(rootProject.file("tdlib/prebuilt/$abi/lib")) {
@@ -51,7 +71,7 @@ android {
         versionName = providers.gradleProperty("vibetgramVersionName").orElse("0.1.0").get()
         manifestPlaceholders["vibetgramChannel"] = "stable"
         buildConfigField("int", "TELEGRAM_API_ID", telegramApiId.get().toInt().toString())
-        buildConfigField("String", "TELEGRAM_API_HASH", "\"${telegramApiHash.get()}\"")
+        buildConfigField("String", "TELEGRAM_API_HASH", buildConfigString(telegramApiHashValue))
     }
 
     buildTypes {
@@ -99,7 +119,7 @@ android {
 }
 
 tasks.named("preBuild").configure {
-    dependsOn(stageTdlibNative)
+    dependsOn(stageTdlibNative, "validateNativeLibraries")
 }
 
 tasks.register("validateNativeLibraries") {

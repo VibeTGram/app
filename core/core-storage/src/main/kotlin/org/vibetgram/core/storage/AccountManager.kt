@@ -16,6 +16,9 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import org.vibetgram.core.api.AccountHandle
 
+private val STORAGE_ID_PATTERN = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+private val WEBVIEW_SUFFIX_PATTERN = Regex("^vgt-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+
 /** A wrapped account data key. Implementations must not expose the wrapping key. */
 class WrappedAccountKey(bytes: ByteArray) {
     private val encoded = bytes.copyOf()
@@ -89,7 +92,11 @@ private fun createAccountDataPaths(
     storageId: String = UUID.randomUUID().toString(),
     webViewSuffix: String = "vgt-${UUID.randomUUID()}",
 ): AccountDataPaths {
-    val accountRoot = root.resolve("accounts").resolve(storageId)
+    require(STORAGE_ID_PATTERN.matches(storageId)) { "invalid account storage ID" }
+    require(WEBVIEW_SUFFIX_PATTERN.matches(webViewSuffix)) { "invalid WebView profile suffix" }
+    val accountsRoot = root.toAbsolutePath().normalize().resolve("accounts").normalize()
+    val accountRoot = accountsRoot.resolve(storageId).normalize()
+    require(accountRoot.parent == accountsRoot) { "account path escapes the account root" }
     return AccountDataPaths(
         root = accountRoot,
         tdlibDirectory = accountRoot.resolve("tdlib"),

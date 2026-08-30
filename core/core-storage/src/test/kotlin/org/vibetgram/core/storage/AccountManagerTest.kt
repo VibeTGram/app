@@ -1,8 +1,11 @@
 package org.vibetgram.core.storage
 
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
@@ -98,6 +101,30 @@ class AccountManagerTest {
         assertFalse(Files.exists(account.paths.root))
         assertTrue(protector.deletedAliases.contains(account.paths.keyAlias))
         assertFalse(manager.accounts().contains(account.handle))
+    }
+
+    @Test
+    fun `malformed registry storage ID cannot escape account root`() {
+        val root = Files.createTempDirectory("vibetgram-accounts")
+        val encoded = ByteArrayOutputStream().use { bytes ->
+            DataOutputStream(bytes).use { output ->
+                output.writeInt(0x56475231)
+                output.writeInt(1)
+                output.writeInt(1)
+                output.writeUTF("../outside")
+                output.writeUTF("vgt-00000000-0000-4000-8000-000000000000")
+                output.writeBoolean(false)
+                output.writeInt(1)
+                output.writeByte(0)
+            }
+            bytes.toByteArray()
+        }
+        Files.write(root.resolve("accounts.registry"), encoded)
+
+        assertFailsWith<IllegalArgumentException> {
+            AccountManager(root, InMemoryKeyProtector())
+        }
+        assertFalse(Files.exists(root.parent.resolve("outside")))
     }
 
     private class RecordingRuntime : AccountRuntime {
