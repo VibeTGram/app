@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/registry-index.schema.json",
+  "title": "VibeTGram signed addon registry index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "body", "signature"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_sequence",
+        "delegated_key_id",
+        "delegation_sha256",
+        "records",
+        "revocations",
+        "provenance",
+        "generated_at",
+        "expires_at"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "registry_sequence": { "minimum": 2 } },
+            "required": ["registry_sequence"]
+          },
+          "then": { "required": ["previous_index_sha256"] }
+        }
+      ],
+      "properties": {
+        "registry_sequence": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "previous_index_sha256": { "$ref": "#/$defs/sha256" },
+        "delegated_key_id": { "$ref": "#/$defs/keyId" },
+        "delegation_sha256": { "$ref": "#/$defs/sha256" },
+        "records": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 100000,
+          "items": { "$ref": "#/$defs/recordDigest" }
+        },
+        "revocations": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 100000,
+          "items": { "$ref": "#/$defs/revocationDigest" }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": { "type": "string", "pattern": "^provenance/[1-9][0-9]*\\.json$", "maxLength": 100 },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "signature": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "keyId": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "recordDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^records/[a-z][a-z0-9._-]*/[0-9A-Za-z.+-]+\\.json$",
+          "maxLength": 300
+        },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "revocationDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^revocations/[1-9][0-9]*\\.json$", "maxLength": 100 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "algorithm", "role", "key_id", "signed_sha256", "signature"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "algorithm": { "const": "ed25519" },
+        "role": { "const": "registry-index" },
+        "key_id": { "$ref": "#/$defs/keyId" },
+        "signed_sha256": { "$ref": "#/$defs/sha256" },
+        "signature": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$" }
+      }
+    }
+  }
+}

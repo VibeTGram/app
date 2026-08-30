@@ -1,0 +1,17 @@
+[versions]
+# This catalog is the human-facing Gradle view of toolchain.lock.json.
+jdk = "21.0.8"
+gradle = "9.4.1"
+agp = "9.2.0"
+kotlin = "2.3.20"
+android-compile-sdk = "36"
+android-build-tools = "36.0.0"
+android-ndk = "29.0.14206865"
+cmake = "4.1.2"
+compose-bom = "2025.03.00"
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

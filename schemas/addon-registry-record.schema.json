@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/addon-registry-record.schema.json",
+  "title": "VibeTGram addon registry record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "registry_sequence",
+    "addon",
+    "source",
+    "publisher",
+    "compatibility",
+    "reviewed_surface",
+    "licenses",
+    "review",
+    "warnings",
+    "issue_tracker",
+    "published_at",
+    "expires_at"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "registry_sequence": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+    "addon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "version"],
+      "properties": {
+        "id": { "$ref": "#/$defs/packageId" },
+        "type": { "enum": ["mod", "library", "theme"] },
+        "version": { "$ref": "#/$defs/semver" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "verified_commit", "tree_sha256", "manifest_sha256"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://github\\.com/[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/(?![A-Za-z0-9._-]*\\.git$)[A-Za-z0-9._-]{1,100}$",
+          "maxLength": 256
+        },
+        "verified_commit": { "$ref": "#/$defs/gitCommit" },
+        "tree_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id"],
+      "properties": {
+        "key_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "rotation_chain_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic"],
+      "properties": {
+        "semantic": { "$ref": "#/$defs/versionRange" },
+        "gui": { "$ref": "#/$defs/versionRange" },
+        "raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tdlib_commit", "schema_hash", "generator_version"],
+          "properties": {
+            "tdlib_commit": { "$ref": "#/$defs/gitCommit" },
+            "schema_hash": { "$ref": "#/$defs/sha256" },
+            "generator_version": { "$ref": "#/$defs/semver" }
+          }
+        }
+      }
+    },
+    "reviewed_surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capabilities", "domains", "raw_functions", "raw_updates", "raw_fields", "hooks", "ipc_interfaces", "dependencies", "quotas"],
+      "properties": {
+        "capabilities": { "$ref": "#/$defs/stringSet" },
+        "domains": { "$ref": "#/$defs/stringSet" },
+        "raw_functions": { "$ref": "#/$defs/stringSet" },
+        "raw_updates": { "$ref": "#/$defs/stringSet" },
+        "raw_fields": { "$ref": "#/$defs/stringSet" },
+        "hooks": { "$ref": "#/$defs/stringSet" },
+        "ipc_interfaces": { "$ref": "#/$defs/reviewedIpcSet" },
+        "dependencies": { "$ref": "#/$defs/resolvedDependencySet" },
+        "quotas": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" }
+        }
+      }
+    },
+    "licenses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": { "type": "string", "minLength": 1, "maxLength": 160 }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reviewers", "evidence"],
+      "properties": {
+        "state": { "enum": ["community", "unverified", "verified", "revoked"] },
+        "reviewers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 160 }
+        },
+        "security_reviewers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 160 }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "format": "uri", "maxLength": 2048 }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "tos-sensitive",
+          "message-read-plus-network",
+          "reliable-preservation",
+          "raw-tdlib",
+          "critical-operations",
+          "revoked"
+        ]
+      }
+    },
+    "issue_tracker": { "type": "string", "format": "uri", "maxLength": 2048 },
+    "published_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "supersedes_record_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "packageId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$",
+      "minLength": 3,
+      "maxLength": 160
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?$",
+      "maxLength": 80
+    },
+    "versionRange": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["exact"],
+          "properties": { "exact": { "$ref": "#/$defs/semver" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "minimum_inclusive": { "$ref": "#/$defs/semver" },
+            "maximum_exclusive": { "$ref": "#/$defs/semver" }
+          }
+        }
+      ]
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "gitCommit": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 1024,
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "resolvedDependencySet": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "publisher_key_id", "version", "verified_commit", "tree_sha256"],
+        "properties": {
+          "id": { "$ref": "#/$defs/packageId" },
+          "publisher_key_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "version": { "$ref": "#/$defs/semver" },
+          "verified_commit": { "$ref": "#/$defs/gitCommit" },
+          "tree_sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "reviewedIpcSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["direction", "name", "version", "schema_sha256", "data_class"],
+        "allOf": [
+          {
+            "if": { "properties": { "direction": { "const": "consume" } }, "required": ["direction"] },
+            "then": { "required": ["provider"] }
+          },
+          {
+            "if": { "properties": { "direction": { "const": "provide" } }, "required": ["direction"] },
+            "then": { "not": { "required": ["provider"] } }
+          }
+        ],
+        "properties": {
+          "direction": { "enum": ["provide", "consume"] },
+          "provider": { "$ref": "#/$defs/packageIdentity" },
+          "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$", "maxLength": 160 },
+          "version": { "$ref": "#/$defs/semver" },
+          "schema_sha256": { "$ref": "#/$defs/sha256" },
+          "data_class": { "const": "addon-local-nonsensitive" }
+        }
+      }
+    },
+    "packageIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "publisher_key_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/packageId" },
+        "publisher_key_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

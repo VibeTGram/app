@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/hashes.schema.json",
+  "title": "VibeTGram addon payload hashes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "files"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "files": {
+      "type": "object",
+      "minProperties": 2,
+      "maxProperties": 4096,
+      "required": ["manifest.json", "publisher.json"],
+      "propertyNames": {
+        "allOf": [
+          {
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\/$)[A-Za-z0-9._/-]+$",
+            "maxLength": 240
+          },
+          { "not": { "enum": ["hashes.json", "signature.ed25519"] } }
+        ]
+      },
+      "additionalProperties": { "$ref": "#/$defs/fileDigest" }
+    }
+  },
+  "$defs": {
+    "fileDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "size_bytes"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0, "maximum": 1073741824 }
+      }
+    }
+  }
+}

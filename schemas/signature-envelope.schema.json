@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/signature-envelope.schema.json",
+  "title": "VibeTGram detached Ed25519 signature envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "algorithm",
+    "role",
+    "key_id",
+    "signed_sha256",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "algorithm": { "const": "ed25519" },
+    "role": {
+      "enum": [
+        "addon-package",
+        "app-update",
+        "registry-delegation",
+        "registry-index",
+        "registry-revocation",
+        "publisher-rotation"
+      ]
+    },
+    "key_id": { "$ref": "#/$defs/keyId" },
+    "signed_sha256": { "$ref": "#/$defs/sha256" },
+    "signature": {
+      "type": "string",
+      "description": "Unpadded base64url encoding of exactly 64 signature bytes",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    }
+  },
+  "$defs": {
+    "keyId": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

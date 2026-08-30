@@ -16,6 +16,8 @@ The production repository family is hosted under the `VibeTGram` organization:
 - `core`, `mods`, and `gui` are HTTPS Git submodules of `app`.
 - Each submodule is checked out at the gitlink commit recorded by the `app`
   superproject; `.gitmodules` contains no branch or floating revision.
+- `gradle/upstreams.properties` records the exact commit expected for each
+  submodule and is checked by the local composition validator.
 - `settings.gradle.kts` includes the three checked-out repositories as Gradle
   composite builds.
 - `mods-example` targets the public Mod SDK but is not embedded as a build

@@ -1,0 +1,498 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/vibemod.schema.json",
+  "title": "VibeTGram Luau mod manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "type",
+    "id",
+    "version",
+    "name",
+    "description",
+    "publisher",
+    "entrypoint",
+    "api",
+    "capabilities",
+    "licenses"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "capabilities": {
+            "contains": {
+              "enum": [
+                "tdlib.raw.objects",
+                "tdlib.raw.invoke",
+                "tdlib.raw.observe_incoming",
+                "tdlib.raw.mutate_incoming",
+                "tdlib.raw.suppress_incoming"
+              ]
+            }
+          }
+        },
+        "required": ["capabilities"]
+      },
+      "then": {
+        "required": ["raw"],
+        "properties": {
+          "api": { "required": ["raw"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "capabilities": { "contains": { "const": "tdlib.raw.invoke" } } },
+        "required": ["capabilities"]
+      },
+      "then": {
+        "properties": {
+          "raw": {
+            "required": ["functions"],
+            "properties": { "functions": { "minItems": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "capabilities": {
+            "contains": {
+              "enum": [
+                "tdlib.raw.observe_incoming",
+                "tdlib.raw.mutate_incoming",
+                "tdlib.raw.suppress_incoming"
+              ]
+            }
+          }
+        },
+        "required": ["capabilities"]
+      },
+      "then": {
+        "properties": {
+          "raw": {
+            "required": ["updates"],
+            "properties": { "updates": { "minItems": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "capabilities": {
+            "contains": {
+              "enum": [
+                "tdlib.raw.objects",
+                "tdlib.raw.invoke",
+                "tdlib.raw.observe_incoming",
+                "tdlib.raw.mutate_incoming"
+              ]
+            }
+          }
+        },
+        "required": ["capabilities"]
+      },
+      "then": {
+        "properties": {
+          "raw": {
+            "required": ["fields"],
+            "properties": { "fields": { "minItems": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "capabilities": { "contains": { "const": "network.https" } } },
+        "required": ["capabilities"]
+      },
+      "then": { "required": ["network"] }
+    },
+    {
+      "if": { "required": ["ipc"] },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "enum": [
+                "ui.extend",
+                "ui.screen",
+                "ui.navigate",
+                "ui.prompt",
+                "storage.kv",
+                "storage.documents",
+                "settings.global_safe",
+                "diagnostics.own",
+                "ipc.provide",
+                "ipc.consume"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "capabilities": {
+            "contains": { "enum": ["ipc.provide", "ipc.consume"] }
+          }
+        },
+        "required": ["capabilities"]
+      },
+      "then": { "required": ["ipc"] }
+    },
+    {
+      "if": {
+        "properties": { "capabilities": { "contains": { "const": "ipc.provide" } } },
+        "required": ["capabilities"]
+      },
+      "then": {
+        "properties": {
+          "ipc": {
+            "required": ["provides"],
+            "properties": { "provides": { "minItems": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "capabilities": { "contains": { "const": "ipc.consume" } } },
+        "required": ["capabilities"]
+      },
+      "then": {
+        "properties": {
+          "ipc": {
+            "required": ["consumes"],
+            "properties": { "consumes": { "minItems": 1 } }
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "type": { "const": "vibemod" },
+    "id": { "$ref": "#/$defs/packageId" },
+    "version": { "$ref": "#/$defs/semver" },
+    "name": { "$ref": "#/$defs/localizedText" },
+    "description": { "$ref": "#/$defs/localizedText" },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id"],
+      "properties": {
+        "key_id": { "$ref": "#/$defs/keyId" }
+      }
+    },
+    "entrypoint": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.luau$",
+      "maxLength": 240
+    },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic"],
+      "properties": {
+        "semantic": { "$ref": "#/$defs/versionRange" },
+        "raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tdlib_commit", "schema_hash", "generator_version"],
+          "properties": {
+            "tdlib_commit": { "$ref": "#/$defs/gitCommit" },
+            "schema_hash": { "$ref": "#/$defs/sha256" },
+            "generator_version": { "$ref": "#/$defs/semver" }
+          }
+        },
+        "gui": { "$ref": "#/$defs/versionRange" }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "raw": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "functions": { "$ref": "#/$defs/rawNames" },
+        "updates": { "$ref": "#/$defs/rawNames" },
+        "fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*\\.[A-Za-z][A-Za-z0-9_]*$",
+            "maxLength": 160
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domains"],
+      "properties": {
+        "domains": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/domain" }
+        },
+        "cookies": { "type": "boolean", "default": false }
+      }
+    },
+    "quotas": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memory_bytes": { "$ref": "#/$defs/nonNegativeInteger" },
+        "storage_bytes": { "$ref": "#/$defs/nonNegativeInteger" },
+        "reliable_journal_bytes": { "$ref": "#/$defs/nonNegativeInteger" },
+        "network_bytes_per_day": { "$ref": "#/$defs/nonNegativeInteger" },
+        "async_operations": { "$ref": "#/$defs/nonNegativeInteger" },
+        "ui_nodes": { "$ref": "#/$defs/nonNegativeInteger" }
+      }
+    },
+    "hooks": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "kind", "target"],
+        "properties": {
+          "name": { "$ref": "#/$defs/symbol" },
+          "kind": { "enum": ["sync", "async"] },
+          "target": { "$ref": "#/$defs/symbol" }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requires": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "publisher_key_id", "version_range"],
+            "properties": {
+              "id": { "$ref": "#/$defs/packageId" },
+              "publisher_key_id": { "$ref": "#/$defs/keyId" },
+              "version_range": { "$ref": "#/$defs/versionRange" },
+              "kind": { "enum": ["mod", "library", "theme"] }
+            }
+          }
+        },
+        "load_after": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/packageIdentity" }
+        }
+      }
+    },
+    "ipc": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "provides": { "$ref": "#/$defs/providedIpcInterfaces" },
+        "consumes": { "$ref": "#/$defs/consumedIpcInterfaces" }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "slots": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/symbol" }
+        },
+        "routes": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/symbol" }
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/nonNegativeInteger" },
+        "collections": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "$ref": "#/$defs/symbol" },
+              "indexes": {
+                "type": "array",
+                "uniqueItems": true,
+                "maxItems": 16,
+                "items": { "$ref": "#/$defs/symbol" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bundled_themes": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/relativePath" }
+    },
+    "licenses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": { "type": "string", "minLength": 1, "maxLength": 160 }
+    },
+    "issue_tracker": { "type": "string", "format": "uri", "maxLength": 2048 }
+  },
+  "$defs": {
+    "packageId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$",
+      "minLength": 3,
+      "maxLength": 160
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?$",
+      "maxLength": 80
+    },
+    "versionRange": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["exact"],
+          "properties": { "exact": { "$ref": "#/$defs/semver" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "minimum_inclusive": { "$ref": "#/$defs/semver" },
+            "maximum_exclusive": { "$ref": "#/$defs/semver" }
+          }
+        }
+      ]
+    },
+    "localizedText": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 64,
+      "required": ["en"],
+      "propertyNames": { "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$" },
+      "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 4096 }
+    },
+    "keyId": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitCommit": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+      "maxLength": 160
+    },
+    "symbol": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$",
+      "maxLength": 160
+    },
+    "rawNames": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 512,
+      "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$", "maxLength": 120 }
+    },
+    "domain": {
+      "type": "string",
+      "pattern": "^(?:\\*\\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
+      "maxLength": 253
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\/$)[A-Za-z0-9._/-]+$",
+      "maxLength": 240
+    },
+    "nonNegativeInteger": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "packageIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "publisher_key_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/packageId" },
+        "publisher_key_id": { "$ref": "#/$defs/keyId" }
+      }
+    },
+    "providedIpcInterfaces": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version", "schema_sha256", "data_class"],
+        "properties": {
+          "name": { "$ref": "#/$defs/symbol" },
+          "version": { "$ref": "#/$defs/semver" },
+          "schema_sha256": { "$ref": "#/$defs/sha256" },
+          "data_class": { "const": "addon-local-nonsensitive" }
+        }
+      }
+    },
+    "consumedIpcInterfaces": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["provider", "name", "version", "schema_sha256", "data_class"],
+        "properties": {
+          "provider": { "$ref": "#/$defs/packageIdentity" },
+          "name": { "$ref": "#/$defs/symbol" },
+          "version": { "$ref": "#/$defs/semver" },
+          "schema_sha256": { "$ref": "#/$defs/sha256" },
+          "data_class": { "const": "addon-local-nonsensitive" }
+        }
+      }
+    }
+  }
+}
