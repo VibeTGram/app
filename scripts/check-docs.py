@@ -11,6 +11,18 @@ from urllib.parse import unquote
 ROOT = Path(__file__).resolve().parents[1]
 LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 TEXT_SUFFIXES = {".md", ".json", ".py"}
+EXCLUDED_DIRS = {
+    ".build",
+    ".git",
+    ".gradle",
+    ".idea",
+    ".jdk21",
+    ".toolchains",
+    ".venv",
+    ".worktrees",
+    "__pycache__",
+    "build",
+}
 
 
 def main() -> None:
@@ -18,7 +30,9 @@ def main() -> None:
     files = sorted(
         path
         for path in ROOT.rglob("*")
-        if path.is_file() and ".git" not in path.parts and path.suffix in TEXT_SUFFIXES
+        if path.is_file()
+        and not any(part in EXCLUDED_DIRS for part in path.parts)
+        and path.suffix in TEXT_SUFFIXES
     )
 
     for path in files:

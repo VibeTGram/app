@@ -25,6 +25,7 @@ pin that development dependency rather than relying on a global installation.
 7. [Feature parity](feature-parity.md)
 8. [Roadmap](roadmap.md)
 9. [Key management](security/key-management-runbook.md)
+10. [Internal CI lanes](ci.md)
 
 Machine-readable contracts and their semantic-validation boundary are indexed
 in [`schemas/README.md`](../schemas/README.md). Primary-source evidence and the

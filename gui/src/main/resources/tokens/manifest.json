@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "type": "vibetheme",
+  "id": "org.vibetgram.theme.m3expressive",
+  "version": "1.0.0",
+  "name": {
+    "en": "Material 3 Expressive Base"
+  },
+  "description": {
+    "en": "Default Material 3 Expressive theme tokens for VibeTGram GUI"
+  },
+  "publisher": {
+    "key_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "gui": {
+    "version": {
+      "minimum_inclusive": "1.0.0",
+      "maximum_exclusive": "2.0.0"
+    }
+  },
+  "resources": {
+    "tokens": [
+      "tokens/base.json"
+    ]
+  },
+  "licenses": [
+    "Apache-2.0"
+  ]
+}

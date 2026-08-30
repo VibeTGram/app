@@ -1,0 +1,102 @@
+name: Internal build lanes
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: internal-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Keep the lane commands in scripts/ci-lane.sh so they can be run locally.
+jobs:
+  pin-validation:
+    name: Pin and contract validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install pinned schema-validation dependency
+        run: |
+          python3 -m venv .ci-venv
+          .ci-venv/bin/python -m pip install --disable-pip-version-check --no-input --requirement requirements-ci.txt
+          printf '%s\n' "$GITHUB_WORKSPACE/.ci-venv/bin" >> "$GITHUB_PATH"
+      - name: Run pin validation lane
+        run: bash scripts/ci-lane.sh pin-validation
+
+  jvm-fake-adapter:
+    name: JVM and fake-adapter tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install pinned JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: 21.0.8+9
+      - name: Run JVM/fake-adapter lane
+        run: bash scripts/ci-lane.sh jvm-fake-adapter
+
+  compose-compilation:
+    name: Compose and composite-build compilation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+      - name: Install pinned JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: 21.0.8+9
+      - name: Run Compose compilation lane
+        run: bash scripts/ci-lane.sh compose-compilation
+
+  internal-artifacts:
+    name: Internal APK and archive validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+      - name: Install pinned JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: 21.0.8+9
+      - name: Run internal artifact lane
+        run: bash scripts/ci-lane.sh internal-artifacts
+
+  aggregate-status:
+    name: Aggregate internal build status
+    if: ${{ always() }}
+    needs:
+      - pin-validation
+      - jvm-fake-adapter
+      - compose-compilation
+      - internal-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every internal lane to pass
+        env:
+          PIN_VALIDATION: ${{ needs.pin-validation.result }}
+          JVM_FAKE_ADAPTER: ${{ needs.jvm-fake-adapter.result }}
+          COMPOSE_COMPILATION: ${{ needs.compose-compilation.result }}
+          INTERNAL_ARTIFACTS: ${{ needs.internal-artifacts.result }}
+        run: |
+          set -euo pipefail
+          for lane in \
+            "pin-validation=$PIN_VALIDATION" \
+            "jvm-fake-adapter=$JVM_FAKE_ADAPTER" \
+            "compose-compilation=$COMPOSE_COMPILATION" \
+            "internal-artifacts=$INTERNAL_ARTIFACTS"; do
+            printf '%s\n' "$lane"
+            test "${lane#*=}" = success
+          done

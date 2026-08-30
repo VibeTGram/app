@@ -1,0 +1,9 @@
+{
+  "sdk_version": "1.0.0",
+  "mod_api_version": "1.0.0",
+  "semantic_api_version": "1.0.0",
+  "gui_api_version": "1.0.0",
+  "vibemod_schema_sha256": "f64981b94b4b64da32ffa543a458c588400cf4bf369517604d3aa046d393dc6f",
+  "vibetheme_schema_sha256": "9729d1f92dc509cf61efd535a01503c74a8cea6f9218396b583e9491b652bd06",
+  "raw_schema_status": "pending-core-schema"
+}

@@ -1,0 +1,10 @@
+{
+  "luau": {
+    "repository": "https://github.com/luau-lang/luau",
+    "commit": "6dafc0dd9909efe534c825d1b1184644e1f7a4e4",
+    "jit": false,
+    "native_codegen": false,
+    "accept_package_bytecode": false,
+    "persist_bytecode": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "types": [
+    {"name": "UiText", "fields": [["text", "string"], ["style", "string"]]},
+    {"name": "UiButton", "fields": [["action_id", "string"], ["label", "string"]]},
+    {"name": "UiInput", "fields": [["action_id", "string"], ["placeholder", "string"]]},
+    {"name": "IpcValue", "fields": [["value", "string"]]}
+  ],
+  "facades": [
+    {"name": "ui", "capability": "ui.extend", "methods": [
+      {"name": "register", "parameters": ["UiNode"], "result": "boolean"}
+    ]},
+    {"name": "ipc", "capability": "ipc.consume", "methods": [
+      {"name": "call", "parameters": ["string", "IpcValue"], "result": "IpcValue"}
+    ]},
+    {"name": "settings", "capability": "settings.global_safe", "methods": [
+      {"name": "get", "parameters": ["string"], "result": "string"}
+    ]}
+  ]
+}
