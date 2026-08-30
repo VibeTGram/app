@@ -3,7 +3,6 @@ package org.vibetgram.core.tdlib
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TdJsonCodecTest {
@@ -72,14 +71,14 @@ class TdJsonCodecTest {
     }
 
     @Test
-    fun `maps upstream errors without returning raw messages`() {
+    fun `maps upstream errors to a safe error identifier without raw details`() {
         val decoded = TdJsonCodec.decode(
             """{"@type":"error","code":400,"message":"PHONE_CODE_INVALID 123456","@client_id":1,"@extra":9}""",
         )
         val response = assertIs<TdJsonEnvelope.Response>(decoded)
         val error = assertIs<TdResult.Error>(response.result)
         assertEquals(TdError.InvalidParameters, error.error)
-        assertNull(error.safeMessage)
+        assertEquals("PHONE_CODE_INVALID", error.safeMessage)
         assertEquals(9, response.requestId)
     }
 

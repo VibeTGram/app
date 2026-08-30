@@ -185,8 +185,13 @@ object TdJsonCodec {
             code == 400 -> TdError.InvalidParameters
             else -> TdError.Internal
         }
-        return TdResult.Error(category, code = code, safeMessage = null)
+        return TdResult.Error(category, code = code, safeMessage = message.safeErrorCode())
     }
+
+    /** Keep only Telegram's uppercase error identifier; never expose raw server details. */
+    private fun String.safeErrorCode(): String? = trim()
+        .substringBefore(' ')
+        .takeIf { SAFE_ERROR_CODE.matches(it) }
 
     private fun decodeUpdate(root: JsonObject): TdUpdate? = when (root.type) {
         "updateAuthorizationState" -> decodeAuthorization(root["authorization_state"]?.jsonObject ?: return null)
@@ -273,4 +278,6 @@ object TdJsonCodec {
     } finally {
         fill('\u0000')
     }
+
+    private val SAFE_ERROR_CODE = Regex("^[A-Z][A-Z0-9_]{2,63}$")
 }

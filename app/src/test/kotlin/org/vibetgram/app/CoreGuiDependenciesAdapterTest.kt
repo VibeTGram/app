@@ -46,6 +46,11 @@ class CoreGuiDependenciesAdapterTest {
         assertEquals(AuthState.WaitPhoneNumber, dependencies.authService.observeAuthState().first())
         val guiAccount = dependencies.accountManager.observeActiveAccount().first()!!
 
+        assertTrue(
+            dependencies.authService.setPhoneNumber("+7 (999) 123-45-67") is TelegramResult.Success,
+        )
+        assertEquals("+79991234567", engine.lastPhoneNumber)
+
         val chats = dependencies.chatQuery.observeChats(guiAccount).first()
         assertEquals(-100123L, chats.single().ref.id)
         assertEquals("Core team", chats.single().title)
@@ -82,6 +87,7 @@ private class FakeEngine(
     val details = MutableStateFlow(AuthorizationDetails(AuthorizationState.WAITING_PHONE_NUMBER))
     private val updates = MutableSharedFlow<MessageDelta>()
     var lastSentText: String? = null
+    var lastPhoneNumber: String? = null
 
     override fun start() = Unit
     override fun recoverProcess() = Unit
@@ -89,8 +95,10 @@ private class FakeEngine(
     override fun observeAuthorization() = authorization
     override fun observeAuthorizationDetails() = details
 
-    override suspend fun setAuthenticationPhoneNumber(phoneNumber: String): CoreResult<Unit> =
-        CoreResult.Success(Unit)
+    override suspend fun setAuthenticationPhoneNumber(phoneNumber: String): CoreResult<Unit> {
+        lastPhoneNumber = phoneNumber
+        return CoreResult.Success(Unit)
+    }
 
     override suspend fun checkAuthenticationCode(code: CharArray): CoreResult<Unit> = CoreResult.Success(Unit)
     override suspend fun checkAuthenticationPassword(password: CharArray): CoreResult<Unit> = CoreResult.Success(Unit)

@@ -92,8 +92,10 @@ internal class CoreGuiDependenciesAdapter(
     ) { details, phone -> details.toGuiAuthState(phone) }
 
     override suspend fun setPhoneNumber(phone: String): GuiResult<Unit> {
-        submittedPhone.value = phone
-        return engine.setAuthenticationPhoneNumber(phone).toGuiResult()
+        val normalized = normalizePhoneNumber(phone)
+            ?: return GuiResult.failure(GuiError.Upstream(400, "PHONE_NUMBER_INVALID"))
+        submittedPhone.value = normalized
+        return engine.setAuthenticationPhoneNumber(normalized).toGuiResult()
     }
 
     override suspend fun checkAuthCode(code: String): GuiResult<Unit> =
@@ -363,6 +365,24 @@ internal class CoreGuiDependenciesAdapter(
         CoreError.UserConfirmationRequired,
         -> GuiError.Unsupported
         is CoreError.Upstream -> GuiError.Upstream(safeCode, safeMessage)
+    }
+
+    private fun normalizePhoneNumber(value: String): String? {
+        val input = value.trim()
+        if (input.isEmpty()) return null
+        val normalized = buildString(input.length) {
+            input.forEachIndexed { index, character ->
+                when {
+                    character.isDigit() -> append(character)
+                    character == '+' && index == 0 -> append(character)
+                    character == ' ' || character == '-' || character == '(' || character == ')' || character == '.' -> Unit
+                    else -> return null
+                }
+            }
+        }
+        return normalized.takeIf {
+            it.startsWith('+') && it.drop(1).length >= 5
+        }
     }
 
     private fun <T> CoreResult<T>.toGuiResult(): GuiResult<T> = when (this) {
