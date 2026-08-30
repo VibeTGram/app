@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/publisher.schema.json",
+  "title": "VibeTGram addon publisher public identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "algorithm", "key_id", "public_key"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "algorithm": { "const": "ed25519" },
+    "key_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "public_key": {
+      "type": "string",
+      "description": "Unpadded base64url encoding of exactly 32 raw public-key bytes",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "display_name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "website": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 2048 },
+    "issue_tracker": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 2048 }
+  }
+}

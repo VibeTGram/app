@@ -1,9 +1,42 @@
-# VibeTGram repository documentation
+# VibeTGram specification index
 
-Canonical repository: https://github.com/VibeTGram/app
+This directory is the design source of truth until the six production
+repositories have been bootstrapped. When a contract moves into its owning
+repository, this index must retain a link to the authoritative copy.
 
-This index is retained in the composition root so the repository boundaries and
-ownership table remain explicit after the repository split.
+Local checks:
+
+```bash
+python3 scripts/check-docs.py
+PYTHONPATH=/path/to/jsonschema python3 scripts/validate-contracts.py
+```
+
+`validate-contracts.py` requires `jsonschema` with Draft 2020-12 support; CI will
+pin that development dependency rather than relying on a global installation.
+
+## Normative documents
+
+1. [System architecture](architecture/system-architecture.md)
+2. [Two-level Core/Mod API](api/two-level-api.md)
+3. [Architecture decision records](architecture/adr/README.md)
+4. [Capability matrix](modding/capability-matrix.md)
+5. [Package formats](modding/package-formats.md)
+6. [Addon registry](modding/addons-market.md)
+7. [Feature parity](feature-parity.md)
+8. [Roadmap](roadmap.md)
+9. [Key management](security/key-management-runbook.md)
+10. [Internal CI lanes](ci.md)
+
+Machine-readable contracts and their semantic-validation boundary are indexed
+in [`schemas/README.md`](../schemas/README.md). Primary-source evidence and the
+AyuGram/exteraGram comparison are in
+[`research/primary-sources.md`](research/primary-sources.md).
+
+`MUST`, `MUST NOT`, `SHOULD`, and `MAY` are used in their RFC 2119 sense.
+Architecture decision records override descriptive prose when the two conflict.
+Machine-readable schemas override examples when validating a package.
+
+## Ownership after repository split
 
 | Document | Owning repository |
 | --- | --- |
@@ -15,14 +48,6 @@ ownership table remain explicit after the repository split.
 | Reviewed addon records | `addons-market` |
 | Executable tutorials | `mods-example` |
 
-## Canonical repositories
-
-- [`app`](https://github.com/VibeTGram/app) — composition and releases
-- [`core`](https://github.com/VibeTGram/core) — Telegram engine and Core API
-- [`mods`](https://github.com/VibeTGram/mods) — runtime and Mod SDK
-- [`gui`](https://github.com/VibeTGram/gui) — replaceable presentation
-- [`mods-example`](https://github.com/VibeTGram/mods-example) — examples
-- [`addons-market`](https://github.com/VibeTGram/addons-market) — registry data
-
-The source of truth for each normative document lives in its owning repository;
-this table and links are updated when a contract moves.
+The `mods/docs` directory will be the source for the public GitHub Wiki. Wiki
+content is generated from versioned files and is never edited as an independent
+source of truth.

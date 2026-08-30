@@ -1,0 +1,86 @@
+# Local workspace and agent state
+.worktrees/
+.agents/
+.codex/
+.jdk*/
+.venv/
+.gradle/
+.kotlin/
+.pytest_cache/
+.idea/
+*.iml
+local.properties
+
+# Build output and generated artifacts
+.build/
+build/
+out/
+artifacts/
+tdlib/prebuilt/
+*.apk
+*.aab
+*.idsig
+
+# Python caches and reports
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+*.env
+*.local
+*.secret
+*.secrets
+secrets/
+credentials/
+private/
+*credentials*.json
+*credentials*.yaml
+*credentials*.yml
+*secrets*.json
+*secrets*.yaml
+*secrets*.yml
+signing.properties
+keystore.properties
+
+# Signing keys and private key material
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.mobileprovision
+*.key
+**/*private*.pem
+**/*secret*.pem
+
+# Service configuration with credentials
+google-services.json
+GoogleService-Info.plist
+
+# Telegram/account sessions and local data
+**/tdata/
+**/tdlib-data/
+**/telegram-data/
+**/runtime-data/
+**/sessions/
+*.session
+*.session.*
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs, traces, dumps and local captures
+*.log
+*.trace
+*.dump
+*.core
+*.har
+cookies/
+*.cookie
+*.cookies

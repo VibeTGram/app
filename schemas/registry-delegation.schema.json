@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/registry-delegation.schema.json",
+  "title": "VibeTGram registry delegated-key authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "body", "signature"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delegation_sequence",
+        "root_key_id",
+        "delegated_key_id",
+        "delegated_public_key",
+        "roles",
+        "not_before",
+        "not_after"
+      ],
+      "properties": {
+        "delegation_sequence": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "root_key_id": { "$ref": "#/$defs/keyId" },
+        "delegated_key_id": { "$ref": "#/$defs/keyId" },
+        "delegated_public_key": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": { "enum": ["index", "revocation"] }
+        },
+        "not_before": { "type": "string", "format": "date-time" },
+        "not_after": { "type": "string", "format": "date-time" }
+      }
+    },
+    "signature": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "keyId": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "algorithm", "role", "key_id", "signed_sha256", "signature"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "algorithm": { "const": "ed25519" },
+        "role": { "const": "registry-delegation" },
+        "key_id": { "$ref": "#/$defs/keyId" },
+        "signed_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "signature": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$" }
+      }
+    }
+  }
+}

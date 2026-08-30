@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/build-bom.schema.json",
+  "title": "VibeTGram immutable CI build BOM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "channel",
+    "application_id",
+    "version_name",
+    "version_code",
+    "repositories",
+    "upstreams",
+    "tdlib_schema_hash",
+    "toolchain",
+    "dependency_verification_sha256",
+    "unsigned_artifact",
+    "generated_at"
+  ],
+  "allOf": [
+    {
+      "if": { "properties": { "channel": { "const": "stable" } }, "required": ["channel"] },
+      "then": { "properties": { "application_id": { "const": "org.vibetgram.client" } } }
+    },
+    {
+      "if": { "properties": { "channel": { "const": "preview" } }, "required": ["channel"] },
+      "then": { "properties": { "application_id": { "const": "org.vibetgram.client.preview" } } }
+    },
+    {
+      "if": { "properties": { "channel": { "const": "nightly" } }, "required": ["channel"] },
+      "then": { "properties": { "application_id": { "const": "org.vibetgram.client.nightly" } } }
+    }
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "channel": { "enum": ["stable", "preview", "nightly"] },
+    "application_id": {
+      "enum": ["org.vibetgram.client", "org.vibetgram.client.preview", "org.vibetgram.client.nightly"]
+    },
+    "version_name": { "$ref": "#/$defs/semver" },
+    "version_code": { "type": "integer", "minimum": 1, "maximum": 2100000000 },
+    "repositories": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "properties": { "name": { "const": "app" } }, "required": ["name"] }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "properties": { "name": { "const": "gui" } }, "required": ["name"] }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "properties": { "name": { "const": "core" } }, "required": ["name"] }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "properties": { "name": { "const": "mods" } }, "required": ["name"] }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "properties": { "name": { "const": "mods-example" } }, "required": ["name"] }, "minContains": 1, "maxContains": 1 },
+        { "contains": { "properties": { "name": { "const": "addons-market" } }, "required": ["name"] }, "minContains": 1, "maxContains": 1 }
+      ],
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/appRepository" },
+          { "$ref": "#/$defs/guiRepository" },
+          { "$ref": "#/$defs/coreRepository" },
+          { "$ref": "#/$defs/modsRepository" },
+          { "$ref": "#/$defs/modsExampleRepository" },
+          { "$ref": "#/$defs/addonsMarketRepository" }
+        ]
+      }
+    },
+    "upstreams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["telegram_android", "tdlib", "tgcalls", "luau"],
+      "properties": {
+        "telegram_android": {
+          "allOf": [
+            { "$ref": "#/$defs/upstream" },
+            { "properties": { "repository": { "const": "https://github.com/DrKLO/Telegram" } } }
+          ]
+        },
+        "tdlib": {
+          "allOf": [
+            { "$ref": "#/$defs/upstream" },
+            { "properties": { "repository": { "const": "https://github.com/tdlib/td" } } }
+          ]
+        },
+        "tgcalls": {
+          "allOf": [
+            { "$ref": "#/$defs/upstream" },
+            { "properties": { "repository": { "const": "https://github.com/TelegramMessenger/tgcalls" } } }
+          ]
+        },
+        "luau": {
+          "allOf": [
+            { "$ref": "#/$defs/upstream" },
+            { "properties": { "repository": { "const": "https://github.com/luau-lang/luau" } } }
+          ]
+        }
+      }
+    },
+    "tdlib_schema_hash": { "$ref": "#/$defs/sha256" },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jdk", "gradle", "agp", "kotlin", "android_sdk", "ndk", "cmake"],
+      "properties": {
+        "jdk": { "$ref": "#/$defs/versionText" },
+        "gradle": { "$ref": "#/$defs/versionText" },
+        "agp": { "$ref": "#/$defs/versionText" },
+        "kotlin": { "$ref": "#/$defs/versionText" },
+        "android_sdk": { "$ref": "#/$defs/versionText" },
+        "ndk": { "$ref": "#/$defs/versionText" },
+        "cmake": { "$ref": "#/$defs/versionText" }
+      }
+    },
+    "dependency_verification_sha256": { "$ref": "#/$defs/sha256" },
+    "unsigned_artifact": { "$ref": "#/$defs/artifact" },
+    "generated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "gitCommit": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?$",
+      "maxLength": 80
+    },
+    "repositoryPinBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit"],
+      "properties": {
+        "name": { "type": "string" },
+        "repository": { "type": "string", "format": "uri" },
+        "commit": { "$ref": "#/$defs/gitCommit" }
+      }
+    },
+    "appRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repositoryPinBase" },
+        { "properties": { "name": { "const": "app" }, "repository": { "const": "https://github.com/VibeTGram/app" } } }
+      ]
+    },
+    "guiRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repositoryPinBase" },
+        { "properties": { "name": { "const": "gui" }, "repository": { "const": "https://github.com/VibeTGram/gui" } } }
+      ]
+    },
+    "coreRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repositoryPinBase" },
+        { "properties": { "name": { "const": "core" }, "repository": { "const": "https://github.com/VibeTGram/core" } } }
+      ]
+    },
+    "modsRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repositoryPinBase" },
+        { "properties": { "name": { "const": "mods" }, "repository": { "const": "https://github.com/VibeTGram/mods" } } }
+      ]
+    },
+    "modsExampleRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repositoryPinBase" },
+        { "properties": { "name": { "const": "mods-example" }, "repository": { "const": "https://github.com/VibeTGram/mods-example" } } }
+      ]
+    },
+    "addonsMarketRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repositoryPinBase" },
+        { "properties": { "name": { "const": "addons-market" }, "repository": { "const": "https://github.com/VibeTGram/addons-market" } } }
+      ]
+    },
+    "versionText": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri", "pattern": "^https://github\\.com/", "maxLength": 256 },
+        "commit": { "$ref": "#/$defs/gitCommit" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": { "type": "string", "pattern": "^[A-Za-z0-9._-]+\\.apk$", "maxLength": 160 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+      }
+    }
+  }
+}

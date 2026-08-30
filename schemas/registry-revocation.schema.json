@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vibetgram.org/v1/registry-revocation.schema.json",
+  "title": "VibeTGram signed addon registry revocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "body", "signature"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revocation_sequence", "subjects", "reason_category", "summary", "effective_at"],
+      "properties": {
+        "revocation_sequence": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "subjects": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/subject" }
+        },
+        "reason_category": {
+          "enum": ["malware", "credential-theft", "sandbox-escape", "publisher-key", "supply-chain", "policy", "other"]
+        },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "evidence": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 2048 },
+        "effective_at": { "type": "string", "format": "date-time" },
+        "replacement": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      }
+    },
+    "signature": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "keyId": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "packageId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$",
+      "minLength": 3,
+      "maxLength": 160
+    },
+    "subject": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "package_id", "publisher_key_id"],
+          "properties": {
+            "kind": { "const": "package" },
+            "package_id": { "$ref": "#/$defs/packageId" },
+            "publisher_key_id": { "$ref": "#/$defs/keyId" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sha256"],
+          "properties": {
+            "kind": { "enum": ["tree", "record"] },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "registry_sequence"],
+          "properties": {
+            "kind": { "const": "record-sequence" },
+            "registry_sequence": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "commit"],
+          "properties": {
+            "kind": { "const": "commit" },
+            "commit": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "key_id"],
+          "properties": {
+            "kind": { "enum": ["publisher-key", "delegated-key"] },
+            "key_id": { "$ref": "#/$defs/keyId" }
+          }
+        }
+      ]
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "algorithm", "role", "key_id", "signed_sha256", "signature"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "algorithm": { "const": "ed25519" },
+        "role": { "const": "registry-revocation" },
+        "key_id": { "$ref": "#/$defs/keyId" },
+        "signed_sha256": { "$ref": "#/$defs/sha256" },
+        "signature": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$" }
+      }
+    }
+  }
+}
