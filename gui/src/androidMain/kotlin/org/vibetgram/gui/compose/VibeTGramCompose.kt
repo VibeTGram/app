@@ -687,4 +687,4 @@ private fun composeStyle(style: ExpressiveTextStyle) = androidx.compose.ui.text.
     fontWeight = androidx.compose.ui.text.font.FontWeight(style.fontWeight)
 )
 
-private fun color(color: ExpressiveColor) = androidx.compose.ui.graphics.Color(color.argb.toULong())
+private fun color(color: ExpressiveColor) = androidx.compose.ui.graphics.Color(color.argb.toInt())
