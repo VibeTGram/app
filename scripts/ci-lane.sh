@@ -53,7 +53,13 @@ case "$lane" in
             gradle --no-daemon --console=plain tasks --all
             for project in core mods gui; do
                 if [[ -f "$ROOT/$project/build.gradle.kts" ]]; then
-                    gradle --no-daemon --console=plain -p "$project" classes
+                    if [[ "$project" == mods ]]; then
+                        # The source-less addon packaging build uses Gradle's
+                        # base plugin and therefore has no JVM classes task.
+                        gradle --no-daemon --console=plain -p "$project" tasks --all
+                    else
+                        gradle --no-daemon --console=plain -p "$project" classes
+                    fi
                 else
                     ci_only "the $project included build must be checked out before compiling the composite"
                 fi

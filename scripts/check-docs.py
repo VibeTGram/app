@@ -13,6 +13,7 @@ LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 TEXT_SUFFIXES = {".md", ".json", ".py"}
 EXCLUDED_DIRS = {
     ".build",
+    ".ci-venv",
     ".git",
     ".gradle",
     ".idea",

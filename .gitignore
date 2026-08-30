@@ -4,6 +4,7 @@
 .codex/
 .jdk*/
 .venv/
+.ci-venv/
 .gradle/
 .kotlin/
 .pytest_cache/
